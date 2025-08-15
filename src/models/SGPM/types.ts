@@ -67,7 +67,7 @@ export interface PostoGraduacao {
 
 export interface CardProps {
   titulo: string;
-  valor: number;
+  valor: number | string;
 }
 
 // === Novos tipos para filtros opcionais ===

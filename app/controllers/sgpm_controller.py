@@ -57,6 +57,36 @@ class SgpmController:
                 status_code=500,
                 detail=f"Erro ao buscar dados por sexo: {str(e)}"
             )
+        
+    def get_policiais_por_posto_grad(self, posto_grad: str = None) -> List[Dict]:
+        """Retorna a quantidade de policiais por posto/graduação."""
+        try:
+            dados = self.model.get_policiais_por_posto_grad(posto_grad)
+            if not dados:
+                raise HTTPException(status_code=404, detail="Nenhum dado encontrado")
+            return dados
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erro ao buscar dados por posto/graduação: {str(e)}")
+
+    def get_policiais_por_unidade(self, unidade: str = None) -> List[Dict]:
+        """Retorna a quantidade de policiais por unidade (OPM)."""
+        try:
+            dados = self.model.get_policiais_por_unidade(unidade)
+            if not dados:
+                raise HTTPException(status_code=404, detail="Nenhum dado encontrado")
+            return dados
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erro ao buscar dados por unidade: {str(e)}")
+
+    def get_policiais_por_comando_regional(self, comando_regional: str = None) -> List[Dict]:
+        """Retorna a quantidade de policiais por comando regional."""
+        try:
+            dados = self.model.get_policiais_por_comando_regional(comando_regional)
+            if not dados:
+                raise HTTPException(status_code=404, detail="Nenhum dado encontrado")
+            return dados
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Erro ao buscar dados por comando regional: {str(e)}")
 
     def get_policiais_por_situacao(self) -> List[Dict]:
         """Retorna a quantidade de policiais por situação."""
@@ -101,12 +131,104 @@ class SgpmController:
                 detail=f"Erro ao buscar dados por posto/graduação: {str(e)}"
             )
 
-    def filtrar_policiais(self, sexo: str = None, situacao: str = None, tipo: str = None) -> Dict:
-        """Filtra policiais com base em sexo, situação e tipo."""
+    def filtrar_policiais(
+        self,
+        sexo: str = None,
+        situacao: str = None,
+        tipo: str = None,
+        posto_grad: str = None,
+        unidade: str = None,
+        comando_regional: str = None
+    ) -> Dict:
+        """Filtra policiais com base em qualquer combinação de filtros."""
         try:
-            dados = self.model.filtrar_policiais(sexo, situacao, tipo)
-            if not dados:
+            dados = self.model.filtrar_policiais(
+                sexo=sexo,
+                situacao=situacao,
+                tipo=tipo,
+                posto_grad=posto_grad,
+                unidade=unidade,
+                comando_regional=comando_regional
+            )
+            if not dados or dados.get("quantidade", 0) == 0:
                 raise HTTPException(status_code=404, detail="Nenhum dado encontrado")
+            return dados
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro ao filtrar policiais: {str(e)}"
+        )
+
+    # Novos métodos para os filtros
+    def get_postos_graduacao(self) -> List[Dict]:
+        """Retorna todos os postos/graduações disponíveis."""
+        try:
+            dados = self.model.get_postos_graduacao()
+            if not dados:
+                raise HTTPException(status_code=404, detail="Nenhum posto/graduação encontrado")
+            return dados
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro ao buscar postos/graduação: {str(e)}"
+            )
+
+    def get_unidades(self) -> List[Dict]:
+        """Retorna todas as unidades disponíveis."""
+        try:
+            dados = self.model.get_unidades()
+            if not dados:
+                raise HTTPException(status_code=404, detail="Nenhuma unidade encontrada")
+            return dados
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro ao buscar unidades: {str(e)}"
+            )
+
+    def get_comandos_regionais(self) -> List[Dict]:
+        """Retorna todos os comandos regionais disponíveis."""
+        try:
+            dados = self.model.get_comandos_regionais()
+            if not dados:
+                raise HTTPException(status_code=404, detail="Nenhum comando regional encontrado")
+            return dados
+        except Exception as e:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Erro ao buscar comandos regionais: {str(e)}"
+            )
+
+    def filtrar_policiais_avancado(
+        self,
+        sexo: str = None,
+        situacao: str = None,
+        tipo: str = None,
+        comando_regional: int = None,
+        unidade: int = None,
+        posto_grad: int = None
+    ) -> Dict:
+        """Filtra policiais com base em todos os filtros disponíveis."""
+        try:
+            print(f"=== CONTROLLER - Parâmetros recebidos ===")
+            print(f"sexo: {sexo} (tipo: {type(sexo)})")
+            print(f"situacao: {situacao} (tipo: {type(situacao)})")
+            print(f"tipo: {tipo} (tipo: {type(tipo)})")
+            print(f"comando_regional: {comando_regional} (tipo: {type(comando_regional)})")
+            print(f"unidade: {unidade} (tipo: {type(unidade)})")
+            print(f"posto_grad: {posto_grad} (tipo: {type(posto_grad)})")
+            print(f"=== FIM CONTROLLER ===")
+            
+            dados = self.model.filtrar_policiais_avancado(
+                sexo=sexo,
+                situacao=situacao,
+                tipo=tipo,
+                comando_regional=comando_regional,
+                unidade=unidade,
+                posto_grad=posto_grad
+            )
+            if not dados or dados.get("quantidade", 0) == 0:
+                return {"quantidade": 0, "dados": []}
             return dados
         except Exception as e:
             raise HTTPException(

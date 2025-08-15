@@ -5,6 +5,8 @@ import { Select } from '../../components/SGPM/Select';
 import { useSGPMData } from '../../hooks/SGPM/useSGPMData';
 import { findQuantidadeByTipo, somaInativos, findQuantidadeBySituacao, sexoMapeado } from '../../utils/SGPM/helpers';
 import { PostoGraduacaoResponse } from '../../models/SGPM/types';
+import { UserIcon } from 'lucide-react';
+import { SGPMService } from '../../services/SGPM/sgpmService';
 
 interface PostoGraduacao {
   posto_graduacao: string;
@@ -14,95 +16,76 @@ interface PostoGraduacao {
 const SgpmPage: React.FC = () => {
   const chartRef = useRef<HTMLDivElement>(null);
   const {
-    dadosSituacao,
-    dadosTipo,
-    dados,
-    sexos,
-    situacoes,
-    tipos,
-    dadosEfetivo,
-    dadosPostoGraduacao,
-    error
+    comandosRegionais,
+    unidades,
+    postosGraduacao,
+    selectedSexo,
+    setSelectedSexo,
+    selectedSituacao,
+    setSelectedSituacao,
+    selectedTipo,
+    setSelectedTipo,
+    selectedComandoRegional,
+    setSelectedComandoRegional,
+    selectedUnidade,
+    setSelectedUnidade,
+    selectedPostoGrad,
+    setSelectedPostoGrad,
+    dadosFiltrados,
+    loading,
+    handleReset
   } = useSGPMData();
 
-  const [selectedSexo, setSelectedSexo] = useState<string>("");
-  const [selectedSituacao, setSelectedSituacao] = useState<string>("");
-  const [selectedTipo, setSelectedTipo] = useState<string>("");
-  const [quantidadeFiltrada, setQuantidadeFiltrada] = useState<number | null>(null);
+  // Estados para os dados originais
+  const [dadosSituacao, setDadosSituacao] = useState<any[]>([]);
+  const [dadosTipo, setDadosTipo] = useState<any[]>([]);
+  const [dados, setDados] = useState<any[]>([]);
+  const [dadosPostoGraduacao, setDadosPostoGraduacao] = useState<PostoGraduacaoResponse>({ feminino: [], masculino: [] });
   const [exibirResultado, setExibirResultado] = useState<boolean>(false);
 
-  // Add useEffect for filtering
+  // Carregar dados originais
   useEffect(() => {
-    const algumFiltroSelecionado = selectedSexo !== "" || selectedSituacao !== "" || selectedTipo !== "";
-    
-    if (!algumFiltroSelecionado) {
-      setExibirResultado(false);
-      setQuantidadeFiltrada(null);
-      return;
-    }
+    const carregarDadosOriginais = async () => {
+      try {
+        const [sexoRes, situacaoRes, tipoRes, postoGradRes] = await Promise.all([
+          SGPMService.getPoliciaisPorSexo(),
+          SGPMService.getPoliciaisPorSituacao(),
+          SGPMService.getPoliciaisPorTipo(),
+          SGPMService.getPoliciaisPorPostoGradSexo()
+        ]);
 
-    // Filter the data based on selected options
-    let quantidade = 0;
-    
-    if (selectedSexo) {
-      quantidade = dados.reduce((acc, curr) => {
-        if (curr.sexo === selectedSexo) {
-          if (selectedSituacao) {
-            const situacaoMatch = dadosSituacao.find(s => s.situacao === selectedSituacao);
-            if (situacaoMatch) {
-              return acc + situacaoMatch.quantidade;
-            }
-          } else if (selectedTipo) {
-            const tipoMatch = dadosTipo.find(t => t.tipo === selectedTipo);
-            if (tipoMatch) {
-              return acc + tipoMatch.quantidade;
-            }
-          } else {
-            return acc + curr.quantidade;
-          }
-        }
-        return acc;
-      }, 0);
-    } else if (selectedSituacao) {
-      const situacaoMatch = dadosSituacao.find(s => s.situacao === selectedSituacao);
-      if (situacaoMatch) {
-        quantidade = situacaoMatch.quantidade;
+        setDados(sexoRes || []);
+        setDadosSituacao(situacaoRes || []);
+        setDadosTipo(tipoRes || []);
+        setDadosPostoGraduacao(postoGradRes || { feminino: [], masculino: [] });
+      } catch (error) {
+        console.error('Erro ao carregar dados originais:', error);
       }
-    } else if (selectedTipo) {
-      const tipoMatch = dadosTipo.find(t => t.tipo === selectedTipo);
-      if (tipoMatch) {
-        quantidade = tipoMatch.quantidade;
-      }
-    }
+    };
 
-    setQuantidadeFiltrada(quantidade);
-    setExibirResultado(true);
-  }, [selectedSexo, selectedSituacao, selectedTipo, dados, dadosSituacao, dadosTipo]);
+    carregarDadosOriginais();
+  }, []);
 
-  const handleReset = () => {
-    setExibirResultado(false);
-    setQuantidadeFiltrada(null);
-    setSelectedSexo("");
-    setSelectedSituacao("");
-    setSelectedTipo("");
-  };
-
-  const postoGraduacoes = [
-    'Soldado', 'Cabo', '3º Sargento', '2º Sargento', '1º Sargento', 
-    'Sub-Tenente', 'Aspirante', '2º Tenente', '1º Tenente', 
-    'Capitão', 'Major', 'Tenente Coronel', 'Coronel'
-  ];
-
+  // Verificar se há filtros selecionados
   useEffect(() => {
-    console.log('Dados do Posto/Graduação:', dadosPostoGraduacao);
-    
+    const algumFiltroSelecionado =
+      selectedSexo !== '' ||
+      selectedSituacao !== '' ||
+      selectedTipo !== '' ||
+      selectedComandoRegional !== null ||
+      selectedUnidade !== null ||
+      selectedPostoGrad !== null;
+
+    setExibirResultado(algumFiltroSelecionado);
+  }, [selectedSexo, selectedSituacao, selectedTipo, selectedComandoRegional, selectedUnidade, selectedPostoGrad]);
+
+  // Configurar gráfico
+  useEffect(() => {
     if (!chartRef.current) {
-      console.log('Elemento do gráfico não encontrado');
       return;
     }
 
     if (!dadosPostoGraduacao || !dadosPostoGraduacao.feminino || !dadosPostoGraduacao.masculino) {
-      console.log('Dados inválidos:', dadosPostoGraduacao);
       return;
     }
 
@@ -117,14 +100,6 @@ const SgpmPage: React.FC = () => {
       chart = echarts.init(chartRef.current);
       
       const option = {
-        title: {
-          text: 'Quantitativo por Posto e Graduação',
-          left: 'center',
-          textStyle: {
-            fontSize: 16,
-            fontWeight: 'bold'
-          }
-        },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
@@ -142,7 +117,7 @@ const SgpmPage: React.FC = () => {
         },
         legend: {
           data: ['Feminino', 'Masculino'],
-          top: 30
+          top: 15
         },
         grid: {
           left: '5%',
@@ -215,20 +190,19 @@ const SgpmPage: React.FC = () => {
     }
   }, [dadosPostoGraduacao]);
 
-  if (error) {
-    return <div className="flex items-center justify-center min-h-screen text-red-600">
-      {error}
-    </div>;
-  }
+  const handleResetFiltros = () => {
+    handleReset();
+    setExibirResultado(false);
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen text-center">
-        <div className="flex flex-col items-center justify-center mb-8 relative px-4 w-full mt-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-400 mb-3 text-center max-w-3xl mx-auto" >
-            Gestão do Efetivo
-          </h1>
-          <p className="text-gray-600 text-base lg:text-lg text-center max-w-2xl mx-auto">Comandos Regionais</p>
-        </div>
+      <div className="flex flex-col items-center justify-center mb-8 relative px-4 w-full mt-8">
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-400 mb-3 text-center max-w-3xl mx-auto">
+          Gestão do Efetivo
+        </h1>
+        <p className="text-gray-600 text-base lg:text-lg text-center max-w-2xl mx-auto">Comandos Regionais</p>
+      </div>
 
       {/* Botão de Navegação para Distribuição Geográfica */}
       <div className="absolute left-1/2 transform -translate-x-1/2 top-24 z-20">
@@ -251,34 +225,76 @@ const SgpmPage: React.FC = () => {
         </a>
       </div>
 
-      <div className="flex space-x-4 mb-5">
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-4 mb-5 justify-center">
         <Select
           value={selectedSexo}
-          onChange={setSelectedSexo}
-          options={sexos.map(item => ({ value: item.sexo, label: sexoMapeado[item.sexo] || item.sexo }))}
+          onChange={(value) => setSelectedSexo(value)}
+          options={dados.map(item => ({ 
+            value: item.sexo, 
+            label: sexoMapeado[item.sexo] || item.sexo 
+          }))}
           placeholder="Selecione o Sexo"
         />
 
         <Select
           value={selectedSituacao}
-          onChange={setSelectedSituacao}
-          options={situacoes.map(item => ({ value: item.situacao, label: item.situacao }))}
+          onChange={(value) => setSelectedSituacao(value)}
+          options={dadosSituacao.map(item => ({ 
+            value: item.situacao, 
+            label: item.situacao 
+          }))}
           placeholder="Selecione a Situação"
         />
 
         <Select
           value={selectedTipo}
-          onChange={setSelectedTipo}
-          options={tipos.map(item => ({ value: item.tipo, label: item.tipo }))}
+          onChange={(value) => setSelectedTipo(value)}
+          options={dadosTipo.map(item => ({ 
+            value: item.tipo, 
+            label: item.tipo 
+          }))}
           placeholder="Selecione o Tipo"
+        />
+
+        {/* Novos filtros */}
+        <Select
+          value={selectedComandoRegional?.toString() || ""}
+          onChange={(value) => setSelectedComandoRegional(value ? parseInt(value) : null)}
+          options={comandosRegionais.map(item => ({ 
+            value: item.cod_opm.toString(), 
+            label: item.opm 
+          }))}
+          placeholder="Selecione o Comando Regional"
+        />
+
+        <Select
+          value={selectedUnidade?.toString() || ""}
+          onChange={(value) => setSelectedUnidade(value ? parseInt(value) : null)}
+          options={unidades.map(item => ({ 
+            value: item.cod_opm.toString(), 
+            label: item.opm 
+          }))}
+          placeholder="Selecione a Unidade"
+        />
+
+        <Select
+          value={selectedPostoGrad?.toString() || ""}
+          onChange={(value) => setSelectedPostoGrad(value ? parseInt(value) : null)}
+          options={postosGraduacao.map(item => ({ 
+            value: item.cod_posto_grad.toString(), 
+            label: item.posto_grad_abrev ? `${item.posto_grad} (${item.posto_grad_abrev})` : item.posto_grad 
+          }))}
+          placeholder="Selecione o Posto/Graduação"
         />
       </div>
 
+      {/* Cards e Resultados */}
       <div className="flex flex-wrap justify-center gap-4 m-5">
         {exibirResultado ? (
           <div className="col-span-full w-full bg-blue-50 rounded-xl flex flex-col items-center justify-center shadow-lg text-lg border border-blue-100 p-8">
             <h2 className="font-bold text-2xl text-blue-700 mb-4">Resultado da Busca</h2>
-            <p className="text-4xl font-bold text-blue-600 mb-2">{quantidadeFiltrada}</p>
+            <p className="text-4xl font-bold text-blue-600 mb-2">{dadosFiltrados?.quantidade || 0}</p>
             <div className="flex flex-wrap gap-2 justify-center mb-4">
               {selectedSexo && (
                 <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
@@ -295,10 +311,25 @@ const SgpmPage: React.FC = () => {
                   {selectedTipo}
                 </span>
               )}
+              {selectedComandoRegional && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  {comandosRegionais.find(cr => cr.cod_opm === selectedComandoRegional)?.opm || selectedComandoRegional.toString()}
+                </span>
+              )}
+              {selectedUnidade && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  {unidades.find(un => un.cod_opm === selectedUnidade)?.opm || selectedUnidade.toString()}
+                </span>
+              )}
+              {selectedPostoGrad && (
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                  {postosGraduacao.find(pg => pg.cod_posto_grad === selectedPostoGrad)?.posto_grad || selectedPostoGrad.toString()}
+                </span>
+              )}
             </div>
             <button
               className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-              onClick={handleReset}
+              onClick={handleResetFiltros}
             >
               Redefinir Filtros
             </button>
@@ -320,11 +351,24 @@ const SgpmPage: React.FC = () => {
         )}
       </div>
 
-      <div className="w-full mb-8 mt-5">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">
-          Quantitativo por Posto e Graduação
-        </h2>
-        <div ref={chartRef} className="w-full h-[500px]" />
+      {/* Gráfico */}
+      <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden mb-8">
+        {/* Header do card */}
+        <div className="p-6 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <UserIcon className="w-5 h-5 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Quantitativo por Posto e Graduação
+            </h3>
+          </div>
+        </div>
+
+        {/* Gráfico */}
+        <div className="p-2">
+          <div ref={chartRef} className="w-full h-[500px]" />
+        </div>
       </div>
     </div>
   );

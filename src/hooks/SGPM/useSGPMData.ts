@@ -1,190 +1,172 @@
-import { useState, useEffect } from "react";
-import {
-  DadosSituacao,
-  DadosTipo,
-  DadosSexo,
-  DadosPorUnidade,
-  DadosEfetivo,
-  ComandoRegional,
-  Unidade,
-  PostoGraduacao,
-  DadosFiltrados
-} from "../../types/sgpm";
-import {
-  fetchPoliciais,
-  fetchPoliciaisFiltrados,
-  fetchSexoPorCidade,
-  fetchTotaisPorCR,
-  fetchComandosRegionais,
-  fetchUnidades,
-  fetchPostosGraduacao
-} from "../../services/api";
+import { useState, useEffect } from 'react';
+import { SGPMService } from '../../services/SGPM/sgpmService';
+import { 
+  fetchSexoPorCidade as fetchSexoPorCidadeAPI, 
+  fetchTotaisPorCR 
+} from '../../services/api';
 
 export const useSGPMData = () => {
-  // --- Estados para opções dos selects ---
-  const [sexos, setSexos] = useState<DadosSexo[]>([]);
-  const [situacoes, setSituacoes] = useState<DadosSituacao[]>([]);
-  const [tipos, setTipos] = useState<DadosTipo[]>([]);
-  const [comandosRegionais, setComandosRegionais] = useState<ComandoRegional[]>([]);
-  const [unidades, setUnidades] = useState<Unidade[]>([]);
-  const [postosGraduacao, setPostosGraduacao] = useState<PostoGraduacao[]>([]);
+  // Estados para os dados dos filtros
+  const [comandosRegionais, setComandosRegionais] = useState<any[]>([]);
+  const [unidades, setUnidades] = useState<any[]>([]);
+  const [postosGraduacao, setPostosGraduacao] = useState<any[]>([]);
 
-  // --- Estados para filtros selecionados ---
-  const [selectedSexo, setSelectedSexo] = useState<string>("");
-  const [selectedSituacao, setSelectedSituacao] = useState<string>("");
-  const [selectedTipo, setSelectedTipo] = useState<string>("");
-  const [selectedComando, setSelectedComando] = useState<string>("");
-  const [selectedUnidade, setSelectedUnidade] = useState<string>("");
-  const [selectedPosto, setSelectedPosto] = useState<string>("");
+  // Estados para os filtros selecionados
+  const [selectedSexo, setSelectedSexo] = useState<string>('');
+  const [selectedSituacao, setSelectedSituacao] = useState<string>('');
+  const [selectedTipo, setSelectedTipo] = useState<string>('');
+  const [selectedComandoRegional, setSelectedComandoRegional] = useState<number | null>(null);
+  const [selectedUnidade, setSelectedUnidade] = useState<number | null>(null);
+  const [selectedPostoGrad, setSelectedPostoGrad] = useState<number | null>(null);
 
-  // --- Estados de resultados ---
-  const [quantidadeFiltrada, setQuantidadeFiltrada] = useState<number | null>(null);
-  const [dadosPorUnidade, setDadosPorUnidade] = useState<DadosPorUnidade[]>([]);
-  const [dadosEfetivo, setDadosEfetivo] = useState<DadosEfetivo>({});
-  const [exibirResultado, setExibirResultado] = useState(false);
+  // Estados para os dados filtrados
+  const [dadosFiltrados, setDadosFiltrados] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const [dadosCarregados, setDadosCarregados] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Estados adicionais para a página de distribuição
+  const [sexos, setSexos] = useState<any[]>([]);
+  const [dadosEfetivo, setDadosEfetivo] = useState<any>({});
+  const [dadosPorUnidade, setDadosPorUnidade] = useState<any[]>([]);
 
-  // --- Carrega todas as opções na inicialização ---
+  // Carregar dados iniciais
   useEffect(() => {
-    const carregarOpcoes = async () => {
+    const carregarDados = async () => {
       try {
-        const [
-          sexosData,
-          situacoesData,
-          tiposData,
-          comandosData,
-          unidadesData,
-          postosData,
-          efetivoData
-        ] = await Promise.all([
-          fetchPoliciais("policiais_sexo"),
-          fetchPoliciais("policiais_situacao"),
-          fetchPoliciais("policiais_tipo"),
-          fetchComandosRegionais(),
-          fetchUnidades(),
-          fetchPostosGraduacao(),
+        setLoading(true);
+        
+        // Carregar dados dos filtros em paralelo
+        const [comandosRes, unidadesRes, postosRes, sexosRes, efetivoRes] = await Promise.all([
+          SGPMService.getComandosRegionais(),
+          SGPMService.getUnidades(),
+          SGPMService.getPostosGraduacao(),
+          SGPMService.getPoliciaisPorSexo(),
           fetchTotaisPorCR()
         ]);
 
-        setSexos(sexosData);
-        setSituacoes(situacoesData);
-        setTipos(tiposData);
-        setComandosRegionais(comandosData);
-        setUnidades(unidadesData);
-        setPostosGraduacao(postosData);
-        setDadosEfetivo(efetivoData);
+        setComandosRegionais(comandosRes || []);
+        setUnidades(unidadesRes || []);
+        setPostosGraduacao(postosRes || []);
+        setSexos(sexosRes || []);
+        setDadosEfetivo(efetivoRes || {});
 
-        setDadosCarregados(true);
-      } catch (err) {
-        console.error("Erro ao carregar dados:", err);
-        setError("Erro ao carregar dados");
+      } catch (error) {
+        console.error('Erro ao carregar dados dos filtros:', error);
+        // Em caso de erro, definir arrays vazios para evitar problemas
+        setComandosRegionais([]);
+        setUnidades([]);
+        setPostosGraduacao([]);
+        setSexos([]);
+        setDadosEfetivo({});
+      } finally {
+        setLoading(false);
       }
     };
 
-    carregarOpcoes();
+    carregarDados();
   }, []);
 
-  // --- Filtragem de acordo com os selects ---
+  // Aplicar filtros quando qualquer filtro for alterado
   useEffect(() => {
-    const buscarDadosFiltrados = async () => {
-      if (!dadosCarregados) return;
+    const aplicarFiltros = async () => {
+      try {
+        setLoading(true);
+        
+        const response = await SGPMService.filtrarPoliciaisAvancado(
+          selectedSexo || undefined,
+          selectedSituacao || undefined,
+          selectedTipo || undefined,
+          selectedComandoRegional || undefined,
+          selectedUnidade || undefined,
+          selectedPostoGrad || undefined
+        );
 
-      const algumFiltroSelecionado =
-        selectedSexo !== "" ||
-        selectedSituacao !== "" ||
-        selectedTipo !== "" ||
-        selectedComando !== "" ||
-        selectedUnidade !== "" ||
-        selectedPosto !== "";
-
-      if (!algumFiltroSelecionado) {
-        setExibirResultado(false);
-        setQuantidadeFiltrada(null);
-        return;
-      }
-
-      const resultado: DadosFiltrados | null = await fetchPoliciaisFiltrados(
-        selectedSexo,
-        selectedSituacao,
-        selectedTipo,
-        selectedComando,
-        selectedUnidade,
-        selectedPosto
-      );
-
-      if (resultado && typeof resultado.quantidade === "number") {
-        setQuantidadeFiltrada(resultado.quantidade);
-        setExibirResultado(true);
-      } else {
-        setQuantidadeFiltrada(null);
-        setExibirResultado(false);
+        setDadosFiltrados(response);
+      } catch (error) {
+        console.error('Erro ao aplicar filtros:', error);
+        setDadosFiltrados({ quantidade: 0, dados: [] });
+      } finally {
+        setLoading(false);
       }
     };
 
-    buscarDadosFiltrados();
-  }, [
-    selectedSexo,
-    selectedSituacao,
-    selectedTipo,
-    selectedComando,
-    selectedUnidade,
-    selectedPosto,
-    dadosCarregados
-  ]);
+    // Só aplicar filtros se pelo menos um filtro estiver selecionado
+    if (selectedSexo || selectedSituacao || selectedTipo || 
+        selectedComandoRegional || selectedUnidade || selectedPostoGrad) {
+      aplicarFiltros();
+    } else {
+      setDadosFiltrados(null);
+    }
+  }, [selectedSexo, selectedSituacao, selectedTipo, 
+      selectedComandoRegional, selectedUnidade, selectedPostoGrad]);
 
-  // --- Filtros independentes para usos específicos ---
-  const fetchSexoPorCidadeHandler = async (cidades: string[]) => {
-    const data = await fetchSexoPorCidade(cidades);
-    setDadosPorUnidade(data);
-    return data;
+  // Funções para a página de distribuição
+  const fetchSexoPorCidade = async (cidades: string[]): Promise<any[]> => {
+    try {
+      const data: any[] = await fetchSexoPorCidadeAPI(cidades);
+      setSexos(data);
+      return data;
+    } catch (error) {
+      console.error('Erro ao buscar dados por cidade:', error);
+      return [];
+    }
   };
 
+  const fetchSexoPorUnidade = async (cidade: string): Promise<any[]> => {
+    try {
+      const response = await SGPMService.getPoliciaisPorUnidade(cidade);
+      const data: any[] = response.data || [];
+      setDadosPorUnidade(data);
+      return data;
+    } catch (error) {
+      console.error('Erro ao buscar dados por unidade:', error);
+      return [];
+    }
+  };
+
+  // Função para resetar todos os filtros
   const handleReset = () => {
-    setSelectedSexo("");
-    setSelectedSituacao("");
-    setSelectedTipo("");
-    setSelectedComando("");
-    setSelectedUnidade("");
-    setSelectedPosto("");
-    setQuantidadeFiltrada(null);
-    setExibirResultado(false);
+    setSelectedSexo('');
+    setSelectedSituacao('');
+    setSelectedTipo('');
+    setSelectedComandoRegional(null);
+    setSelectedUnidade(null);
+    setSelectedPostoGrad(null);
+    setDadosFiltrados(null);
   };
 
   return {
-    // opções dos selects
-    sexos,
-    situacoes,
-    tipos,
+    // Dados dos filtros
     comandosRegionais,
     unidades,
     postosGraduacao,
-
-    // filtros selecionados
+    
+    // Estados dos filtros
     selectedSexo,
     setSelectedSexo,
     selectedSituacao,
     setSelectedSituacao,
     selectedTipo,
     setSelectedTipo,
-    selectedComando,
-    setSelectedComando,
+    selectedComandoRegional,
+    setSelectedComandoRegional,
     selectedUnidade,
     setSelectedUnidade,
-    selectedPosto,
-    setSelectedPosto,
-
-    // resultados
-    quantidadeFiltrada,
-    exibirResultado,
-    dadosPorUnidade,
+    selectedPostoGrad,
+    setSelectedPostoGrad,
+    
+    // Dados filtrados
+    dadosFiltrados,
+    loading,
+    
+    // Dados para a página de distribuição
+    sexos,
+    setSexos,
     dadosEfetivo,
-
-    // helpers
-    fetchSexoPorCidadeHandler,
-    handleReset,
-    dadosCarregados,
-    error
+    dadosPorUnidade,
+    fetchSexoPorCidade,
+    fetchSexoPorUnidade,
+    
+    // Funções
+    handleReset
   };
 };

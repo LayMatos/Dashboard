@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import gruposDeMunicipios from '../data/grupodeMunicipios';
 import icone from '../policial.png';
 import geoDataMT from '../data/geo-MT.json';
-import { MapComponentProps, GeoFeature, GeoData, GruposDeMunicipios } from '../types/map';
+import { MapComponentProps, GeoFeature, GeoData, GruposDeMunicipios, Cidade } from '../types/map';
 
 const pinIcon = new Icon({
   iconUrl: icone,
@@ -98,58 +98,90 @@ const MapComponent: React.FC<MapComponentProps> = ({
   
     layer.on({
       click: () => {
-        let grupoEncontrado = null;
-        Object.keys(gruposDeMunicipios).forEach((grupo) => {
-          if (gruposDeMunicipios[grupo as keyof GruposDeMunicipios]?.some(
-            (municipio: string) => normalizeName(municipio) === normalizedMunicipioNome
+        // Verificar se a cidade está em algum grupo
+        let grupoEncontrado: string | null = null;
+        
+        for (const [grupo, municipios] of Object.entries(gruposDeMunicipios)) {
+          if (municipios.some((municipio: string) => 
+            normalizeName(municipio) === normalizedMunicipioNome
           )) {
             grupoEncontrado = grupo;
+            break;
           }
-        });
-  
-        if (grupoEncontrado && onGroupChange) {
-          const municipios = gruposDeMunicipios[grupoEncontrado as keyof GruposDeMunicipios];
-          onGroupChange(municipios);
         }
-      },
-      mouseover: () => {
-        layer.setStyle({
-          fillOpacity: 0.7,
-        });
-      },
-      mouseout: () => {
-        layer.setStyle(style(feature));
-      },
+        
+        if (grupoEncontrado && onGroupChange) {
+          const municipiosDoGrupo = gruposDeMunicipios[grupoEncontrado as keyof GruposDeMunicipios];
+          if (municipiosDoGrupo) {
+            onGroupChange(municipiosDoGrupo);
+          }
+        } else if (onGroupChange) {
+          // Se não estiver em nenhum grupo, selecionar apenas a cidade
+          onGroupChange([municipioNome]);
+        }
+      }
     });
   };
 
+  // Função para obter o nome da cidade independente do tipo
+  const getCidadeNome = (cidade: Cidade | string): string => {
+    if (typeof cidade === 'string') {
+      return cidade;
+    }
+    return cidade.nome;
+  };
+
   return (
-    <MapContainer center={center} zoom={zoom} style={{ height: '100%', width: '100%' }}>
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-      {cidades.map((cidade, index) => (
-        <Marker key={index} position={cidade.coords} icon={pinIcon}>
-          <Tooltip direction="top" offset={[0, -30]} opacity={1} permanent={false}>
-            <b>{cidade.nome}</b>
-            {cidade.info && (
-              <>
-                <br />
-                {cidade.info}
-              </>
-            )}
-          </Tooltip>
-        </Marker>
-      ))}
-
-      {geoData && (
+    <div className="rounded-xl" style={{ height: '100%', width: '100%' }}>
+      <MapContainer
+        center={center as [number, number]}
+        zoom={zoom}
+        style={{ height: '100%', width: '100%' }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        
         <GeoJSON
           data={geoData}
           style={style}
           onEachFeature={onEachFeature}
         />
-      )}
-    </MapContainer>
+        
+        {cidades.map((cidade, index) => {
+          const cidadeNome = getCidadeNome(cidade);
+          
+          // Encontrar as coordenadas da cidade no GeoJSON
+          const feature = geoData.features.find(f => 
+            normalizeName(f.properties.name) === normalizeName(cidadeNome) ||
+            normalizeName(nomeMunicipiosCorreto[f.properties.name] || f.properties.name) === normalizeName(cidadeNome)
+          );
+          
+          if (feature && feature.geometry.type === 'Polygon') {
+            const coordinates = feature.geometry.coordinates[0];
+            const center = coordinates.reduce(
+              (acc, coord) => [acc[0] + coord[0], acc[1] + coord[1]],
+              [0, 0]
+            ).map(coord => coord / coordinates.length);
+            
+            return (
+              <Marker
+                key={index}
+                position={center as [number, number]}
+                icon={pinIcon}
+              >
+                <Tooltip permanent>
+                  {cidadeNome}
+                </Tooltip>
+              </Marker>
+            );
+          }
+          
+          return null;
+        })}
+      </MapContainer>
+    </div>
   );
 };
 
-export default MapComponent; 
+export default MapComponent;

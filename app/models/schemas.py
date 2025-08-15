@@ -57,4 +57,22 @@ class PostoGradItem(BaseModel):
 
 class PostoGradResponse(BaseModel):
     feminino: List[PostoGradItem]
-    masculino: List[PostoGradItem] 
+    masculino: List[PostoGradItem]
+
+# Novos schemas para os filtros
+class PostoGraduacaoInfo(BaseModel):
+    cod_posto_grad: int
+    posto_grad: str
+    posto_grad_abrev: str
+
+class ComandoRegional(BaseModel):
+    cod_opm: int
+    opm: str
+
+class Unidade(BaseModel):
+    cod_opm: int
+    opm: str
+
+class FiltroAvancadoResponse(BaseModel):
+    quantidade: int
+    dados: List[Dict] 

@@ -1,70 +1,120 @@
-# Getting Started with Create React App
+# Dashboard PMMT
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Este é um dashboard interativo para a Polícia Militar de Mato Grosso, desenvolvido com React, TypeScript e FastAPI.
 
-## Available Scripts
+## Funcionalidades
 
-In the project directory, you can run:
+### SGPM (Sistema de Gestão de Pessoal Militar)
+- Visualização de dados por sexo, situação e tipo de policial
+- Filtragem cruzada de dados (até 3 filtros simultâneos)
+- Mapa interativo com distribuição geográfica por CR
+- Gráficos de distribuição por posto/graduação
+- Comparativo feminino/masculino por cidade
+- Visualização detalhada por unidade
 
-### `npm start`
+### CONEQ (Controle de Equipamentos)
+- Gestão de estoque
+- Controle de entregas
+- Visualização de dados em tempo real
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### SIGARF (Sistema de Gestão de Armamento e Fardamento)
+- Controle de armamento
+- Gestão de fardamento
+- Relatórios e estatísticas
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Tecnologias Utilizadas
 
-### `npm test`
+### Frontend
+- React 18
+- TypeScript
+- Tailwind CSS
+- Recharts (gráficos)
+- ECharts (gráficos avançados)
+- Leaflet (mapas interativos)
+- Axios (requisições HTTP)
+- React Router (navegação)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Backend
+- FastAPI
+- PostgreSQL
+- Pydantic
+- Python 3.12+
 
-### `npm run build`
+## Instalação
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone o repositório:
+```bash
+git clone https://github.com/seu-usuario/dashboard-pmmt.git
+cd dashboard-pmmt
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Instale as dependências do frontend:
+```bash
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Instale as dependências do backend:
+```bash
+pip install -r requirements.txt
+```
 
-### `npm run eject`
+4. Configure o banco de dados:
+- Crie um banco PostgreSQL
+- Configure as variáveis de ambiente
+- Execute as migrações do banco de dados
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Executando o Projeto
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. Inicie o backend:
+```bash
+uvicorn app.main:app --reload
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+2. Inicie o frontend:
+```bash
+npm start
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+O dashboard estará disponível em `http://localhost:3000`
 
-## Learn More
+## Estrutura do Projeto
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
+dashboard-pmmt/
+├── src/
+│   ├── components/          # Componentes reutilizáveis
+│   │   ├── SGPM/           # Componentes específicos do SGPM
+│   │   ├── Charts/         # Componentes de gráficos
+│   │   ├── Cards/          # Componentes de cards
+│   │   └── MapaReal/       # Componente de mapa
+│   ├── pages/              # Páginas da aplicação
+│   │   ├── SGPM/           # Páginas do SGPM
+│   │   ├── CONEQ/          # Páginas do CONEQ
+│   │   └── SIGARF/         # Páginas do SIGARF
+│   ├── services/           # Serviços de API
+│   ├── hooks/              # Hooks customizados
+│   ├── utils/              # Utilitários
+│   ├── models/             # Tipos e interfaces
+│   ├── data/               # Dados estáticos
+│   └── types/              # Definições de tipos
+├── app/                    # Backend FastAPI
+│   ├── routes/             # Rotas da API
+│   ├── controllers/        # Controladores
+│   ├── models/             # Modelos de dados
+│   ├── utils/              # Utilitários
+│   └── config/             # Configurações
+├── public/                 # Arquivos públicos
+└── package.json            # Dependências do frontend
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Contribuição
 
-### Code Splitting
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Licença
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.

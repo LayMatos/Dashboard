@@ -1,19 +1,28 @@
+// --- COMANDOS E UNIDADES ---
 export interface ComandoRegional {
-  cod_opm: number;
-  opm: string;
+  id: number;
+  nome: string;
 }
 
 export interface Unidade {
-  cod_opm: number;
-  unidade: string;
+  id: number;
+  nome: string;
 }
 
-export interface PostoGraduacao {
-  cod_posto_grad: number;
+// --- POSTO E GRADUAÇÃO ---
+export interface PostoGraduacaoInfo {
+  id: number;
   posto_grad: string;
-  total?: number; // opcional
+  posto_grad_abrev?: string;
+  total?: number;
 }
 
+export interface PostoGraduacaoSexo {
+  feminino: number[];
+  masculino: number[];
+}
+
+// --- DADOS DE POLICIAIS ---
 export interface DadosSituacao {
   situacao: string;
   quantidade: number;
@@ -32,14 +41,6 @@ export interface DadosSexo {
   Masculino?: number;
 }
 
-export interface DadosFiltrados {
-  quantidade: number;
-}
-
-export interface DadosEfetivo {
-  [key: string]: number;
-}
-
 export interface DadosPorUnidade {
   unidade: string;
   Feminino: number;
@@ -53,22 +54,17 @@ export interface DadosCidade {
   unidades?: string[];
 }
 
-export interface UnidadesPorCidade {
-  [cidade: string]: string[];
+export interface DadosFiltrados {
+  quantidade: number;
+  dadosPorUnidade?: DadosPorUnidade[];
 }
 
-export interface CidadeSGPM {
-  nome: string;
-  coords: [number, number];
-  cr: string;
-  info?: string;
+// --- EFETIVO ---
+export interface DadosEfetivo {
+  [key: string]: number;
 }
 
-export interface PostoGraduacao {
-  feminino: number[];
-  masculino: number[];
-}
-
+// --- AUXILIARES ---
 export interface GruposDeMunicipios {
   [cr: string]: string[];
 }
@@ -83,4 +79,4 @@ export interface SexoPorCidade {
   Feminino: number;
   Masculino: number;
   unidades?: string[];
-} 
+}

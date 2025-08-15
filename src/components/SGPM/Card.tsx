@@ -7,6 +7,8 @@ export const Card: React.FC<CardProps> = ({ titulo, valor }) => (
     <div className="absolute -right-12 -top-12 w-24 h-24 bg-gradient-to-br from-blue-100 to-sky-100 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
     <div className="absolute -left-12 -bottom-12 w-24 h-24 bg-gradient-to-br from-blue-100 to-sky-100 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
     <h2 className="font-semibold text-blue-800 mb-2 relative z-10">{titulo}</h2>
-    <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-sky-600 bg-clip-text text-transparent relative z-10">{valor}</p>
+    <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-sky-600 bg-clip-text text-transparent relative z-10">
+      {typeof valor === 'number' ? valor.toLocaleString() : valor}
+    </p>
   </div>
 ); 

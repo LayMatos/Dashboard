@@ -51,19 +51,19 @@ const SgpmDistribuicaoPage: React.FC = () => {
       });
 
       if (!crCorrespondente) {
-        console.log("CR correspondente não encontrado.");
+        // CR correspondente não encontrado
         return;
       }
 
       const cidadesDoCR = gruposDeMunicipios[crCorrespondente as keyof typeof gruposDeMunicipios] || [];
-      console.log('CR selecionado:', crCorrespondente);
+              // CR selecionado
 
       if (cidadesDoCR.length === 0) {
-        console.log("Nenhuma cidade encontrada para o CR selecionado.");
+                  // Nenhuma cidade encontrada para o CR selecionado
         return;
       }
 
-      console.log('Cidades do CR:', cidadesDoCR);
+              // Cidades do CR
       const cidadesMaiusculas = cidadesDoCR.map(cidade => cidade.toUpperCase());
       setSelectedCR(cidadesMaiusculas);
 
@@ -144,221 +144,287 @@ const SgpmDistribuicaoPage: React.FC = () => {
   }, [cidadeSelecionada]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-center">
-        <div className="flex flex-col items-center justify-center mb-8 relative px-4 w-full mt-8">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-400 mb-3 text-center max-w-3xl mx-auto" style={{ lineHeight: "3.5rem" }}
-          >
-          Distribuição Geográfica do Efetivo
-          </h1>
-          <p className="text-gray-600 text-base lg:text-lg text-center max-w-2xl mx-auto">Comandos Regionais</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* Header com título e botão de volta */}
+      <div className="relative">
+  {/* Botão centralizado */}
+  <div className="absolute left-1/2 transform -translate-x-1/2 -top-6 z-10">
+    <a href="/sgpm">
+      <button
+        className="
+          flex justify-center items-center p-4 rounded-full
+          transition-all duration-300 ease-in-out
+          shadow-lg hover:shadow-xl hover:scale-105
+          bg-gradient-to-r from-blue-500 to-indigo-600 text-white
+          hover:from-blue-600 hover:to-indigo-700
+        "
+        title="Voltar para Gestão do Efetivo"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 
+          0-2.5-1.12-2.5-2.5s1.12-2.5 
+          2.5-2.5 2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
+        </svg>
+      </button>
+    </a>
+  </div>
 
-      {/* Botão de Volta */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 top-24 z-20">
-        <a href="/sgpm">
-          <button className="
-            flex justify-center items-center p-4 rounded-full
-            transition-all duration-300 ease-in-out
-            shadow-lg hover:shadow-xl hover:scale-105
-            bg-gradient-to-r from-blue-500 to-indigo-600 text-white
-          " title="Voltar para Gestão do Efetivo">
-            <div className="relative group">
-            <svg xmlns="http://www.w3.org/2000/svg" height="24" width="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="0">
-  <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8V22h19.2v-2.8c0-3.2-6.4-4.8-9.6-4.8z"/>
-</svg>
+  {/* Conteúdo centralizado */}
+  <div className="text-center pt-10 pb-6">
+    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+      Gestão do Efetivo
+    </h1>
+    <p className="text-gray-600 text-sm md:text-base mt-2">
+      Comandos Regionais
+    </p>
+  </div>
+</div>
 
-              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                Voltar para Gestão do Efetivo
-              </span>
-            </div>
-          </button>
-        </a>
-      </div>
 
-      <div className="flex w-full gap-12 mb-12">
-        <div className="w-1/2 h-[600px] p-4">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Distribuição Geográfica
-          </h2>
-          <MapComponent
-            cidades={cidadeSGPM.map((cidade) => {
-              const total = totaisPorCR[cidade.cr];
-              const numeroCR = cidade.cr.split("_")[1];
-              const infoFormatada = total !== undefined
-                ? `${numeroCR} CR: ${total} Policiais`
-                : `${numeroCR} CR: Carregando...`;
-
-              return {
-                ...cidade,
-                info: infoFormatada,
-              };
-            })}
-            onGroupChange={handleGroupClick}
-          />
-        </div>
-        
-        <div className="w-1/2 h-[600px] p-4">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Feminino X Masculino por Cidade
-          </h2>
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center">
-                  <div className="w-4 h-4 bg-[#8B5CF6] rounded-full mr-2"></div>
-                  <span className="text-sm text-gray-600">Feminino</span>
-                </div>
-                <div className="flex items-center">
-                  <div className="w-4 h-4 bg-[#10B981] rounded-full mr-2"></div>
-                  <span className="text-sm text-gray-600">Masculino</span>
-                </div>
-              </div>
-              <div className="text-sm text-gray-500">
-                Total de cidades: {sexos.length}
+      {/* Conteúdo Principal */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Seção do Mapa e Gráfico */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-12">
+          {/* Mapa */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
+                <svg className="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Distribuição Geográfica
+              </h2>
+              <div className="text-sm text-gray-500 bg-blue-50 px-3 py-1 rounded-full">
+                {Object.keys(totaisPorCR).length} CRs
               </div>
             </div>
-            <div className="relative" style={{ height: Math.max(400, sexos.length * 40) }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-[500px] rounded-xl overflow-hidden">
+              <MapComponent
+                cidades={cidadeSGPM.map((cidade) => cidade.nome)}
+                onGroupChange={handleGroupClick}
+              />
+            </div>
+          </div>
+          
+          {/* Gráfico Feminino X Masculino */}
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
+                <svg className="w-6 h-6 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Feminino X Masculino por Cidade
+              </h2>
+              <div className="text-sm text-gray-500 bg-purple-50 px-3 py-1 rounded-full">
+                {sexos.length} cidades
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-xl">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 bg-purple-500 rounded-full mr-2 shadow-sm"></div>
+                    <span className="text-sm font-medium text-gray-700">Feminino</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 bg-green-500 rounded-full mr-2 shadow-sm"></div>
+                    <span className="text-sm font-medium text-gray-700">Masculino</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="relative" style={{ height: Math.max(400, sexos.length * 40) }}>
+                {sexos.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={sexos}
+                      margin={{ top: 20, right: 30, left: 150, bottom: 20 }}
+                      layout="vertical"
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
+                      <XAxis
+                        type="number"
+                        tick={{
+                          fill: '#6B7280',
+                          fontSize: 11,
+                          fontWeight: 500
+                        }}
+                      />
+                      <YAxis
+                        dataKey="nome_cidade"
+                        type="category"
+                        tick={{
+                          fill: '#374151',
+                          fontSize: 12,
+                          fontWeight: 600
+                        }}
+                        width={140}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#FFF',
+                          border: '1px solid #E5E7EB',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                          padding: '12px'
+                        }}
+                        formatter={(value, name) => [`${value} policiais`, name === 'qtd_sexoF' ? 'Feminino' : 'Masculino']}
+                        labelStyle={{
+                          fontWeight: 'bold',
+                          marginBottom: '8px',
+                          color: '#374151'
+                        }}
+                      />
+                      <Legend display="none" />
+                      <Bar
+                        dataKey="qtd_sexoF"
+                        name="Feminino"
+                        fill="#8B5CF6"
+                        radius={[6, 6, 6, 6]}
+                        label={{
+                          position: 'right',
+                          fill: '#6B7280',
+                          fontSize: 11,
+                          fontWeight: 600
+                        }}
+                      />
+                      <Bar
+                        dataKey="qtd_sexoM"
+                        name="Masculino"
+                        fill="#10B981"
+                        radius={[6, 6, 6, 6]}
+                        label={{
+                          position: 'right',
+                          fill: '#6B7280',
+                          fontSize: 11,
+                          fontWeight: 600
+                        }}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                    <svg className="w-20 h-20 mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-lg font-medium text-gray-400">Selecione um CR no mapa</p>
+                    <p className="text-sm text-gray-400">Clique em uma região do mapa para ver os dados</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Seletor de Cidade */}
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 mb-8 hover:shadow-2xl transition-shadow duration-300">
+          <div className="text-center mb-6">
+            <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
+              Selecionar Cidade para Análise Detalhada
+            </h3>
+            <p className="text-gray-600 text-sm">
+              Escolha uma cidade para visualizar o comparativo por unidade
+            </p>
+          </div>
+          
+          <div className="flex justify-center">
+            <div className="w-full max-w-sm">
+              <Select
+                value={cidadeSelecionada}
+                onChange={setCidadeSelecionada}
+                options={sexos
+                  .filter(item => item.nome_cidade)
+                  .map(item => ({
+                    value: item.nome_cidade!,
+                    label: item.nome_cidade!
+                  }))}
+                placeholder="Selecione uma cidade"
+                className="w-96 h-14 text-lg pl-6 pr-12"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Gráfico por Unidade */}
+        {cidadeSelecionada && (
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6 hover:shadow-2xl transition-shadow duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center">
+                <svg className="w-6 h-6 text-indigo-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                Comparativo por Unidade em {cidadeSelecionada}
+              </h3>
+              <div className="text-sm text-gray-500 bg-indigo-50 px-3 py-1 rounded-full">
+                {dadosPorUnidade.length} unidades
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-xl">
+              <ResponsiveContainer width="100%" height={Math.max(dadosPorUnidade.length * 50, 500)}>
                 <BarChart
-                  data={sexos}
-                  margin={{ top: 20, right: 30, left: 150, bottom: 20 }}
+                  data={dadosPorUnidade}
                   layout="vertical"
+                  margin={{ top: 20, bottom: 20, left: 120, right: 30 }}
+                  barCategoryGap="20%"
+                  barGap={8}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.6} />
                   <XAxis
                     type="number"
                     tick={{
-                      fill: '#4B5563',
-                      fontSize: 12
+                      fill: '#6B7280',
+                      fontSize: 11,
+                      fontWeight: 500
                     }}
                   />
                   <YAxis
-                    dataKey="nome_cidade"
+                    dataKey="unidade"
                     type="category"
+                    width={250}
                     tick={{
-                      fill: '#4B5563',
-                      fontSize: 12
+                      fill: '#374151',
+                      fontSize: 12,
+                      fontWeight: 600
                     }}
-                    width={140}
                   />
                   <Tooltip
+                    formatter={(value, name) => [`${value} policiais`, name]}
                     contentStyle={{
                       backgroundColor: '#FFF',
                       border: '1px solid #E5E7EB',
-                      borderRadius: '8px',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}
-                    formatter={(value, name) => [value, name === 'qtd_sexoF' ? 'Feminino' : 'Masculino']}
-                    labelStyle={{
-                      fontWeight: 'bold',
-                      marginBottom: '4px'
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                      padding: '12px'
                     }}
                   />
-                  <Legend display="none" />
-                  <Bar
-                    dataKey="qtd_sexoF"
+                  <Legend
+                    verticalAlign="bottom"
+                    height={36}
+                    wrapperStyle={{
+                      paddingTop: '20px'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="Feminino" 
+                    fill="#8B5CF6" 
+                    radius={[6, 6, 6, 6]}
                     name="Feminino"
-                    fill="#8B5CF6"
-                    radius={[4, 4, 4, 4]}
-                    label={{
-                      position: 'right',
-                      fill: '#4B5563',
-                      fontSize: 11
-                    }}
                   />
-                  <Bar
-                    dataKey="qtd_sexoM"
+                  <Bar 
+                    dataKey="Masculino" 
+                    fill="#10B981" 
+                    radius={[6, 6, 6, 6]}
                     name="Masculino"
-                    fill="#10B981"
-                    radius={[4, 4, 4, 4]}
-                    label={{
-                      position: 'right',
-                      fill: '#4B5563',
-                      fontSize: 11
-                    }}
                   />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            {sexos.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                <svg className="w-16 h-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-lg font-medium">Selecione um CR no mapa</p>
-                <p className="text-sm">Clique em uma região do mapa para ver os dados</p>
-              </div>
-            )}
           </div>
-        </div>
+        )}
       </div>
-
-      <div className="flex justify-center mb-8 mt-10">
-        <Select
-          value={cidadeSelecionada}
-          onChange={setCidadeSelecionada}
-          options={sexos
-            .filter(item => item.nome_cidade)
-            .map(item => ({
-              value: item.nome_cidade!,
-              label: item.nome_cidade!
-            }))}
-          placeholder="Selecione uma cidade"
-        />
-      </div>
-
-      {cidadeSelecionada && (
-        <div className="w-full mb-8">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6">
-            Comparativo por Unidade em {cidadeSelecionada}
-          </h3>
-          <ResponsiveContainer width="100%" height={Math.max(dadosPorUnidade.length * 50, 500)}>
-            <BarChart
-              data={dadosPorUnidade}
-              layout="vertical"
-              margin={{ top: 20, bottom: 20, left: 100, right: 30 }}
-              barCategoryGap="20%"
-              barGap={5}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis
-                type="number"
-                tick={{
-                  fill: '#4B5563',
-                  fontSize: 12
-                }}
-              />
-              <YAxis
-                dataKey="unidade"
-                type="category"
-                width={250}
-                tick={{
-                  fill: '#4B5563',
-                  fontSize: 12
-                }}
-              />
-              <Tooltip
-                formatter={(value, name) => [`${value} policiais`, name]}
-                contentStyle={{
-                  backgroundColor: '#FFF',
-                  border: '1px solid #E5E7EB',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                }}
-              />
-              <Legend
-                verticalAlign="bottom"
-                height={36}
-                wrapperStyle={{
-                  paddingTop: '20px'
-                }}
-              />
-              <Bar dataKey="Feminino" fill="#8B5CF6" radius={[4, 4, 4, 4]} />
-              <Bar dataKey="Masculino" fill="#10B981" radius={[4, 4, 4, 4]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
     </div>
   );
 };

@@ -6,7 +6,11 @@ from app.models.schemas import (
     TipoContagem, 
     SituacaoContagem, 
     CidadeResponse,
-    PostoGradResponse
+    PostoGradResponse,
+    PostoGraduacaoInfo,
+    ComandoRegional,
+    Unidade,
+    FiltroAvancadoResponse
 )
 
 router = APIRouter(prefix="/api", tags=["SGPM"])
@@ -44,6 +48,41 @@ async def filtrar_policiais(
 ):
     """Filtra policiais com base em sexo, situação e tipo"""
     return controller.filtrar_policiais(sexo, situacao, tipo)
+
+# Novos endpoints para os filtros
+@router.get("/postos_graduacao_sgpm", response_model=List[PostoGraduacaoInfo])
+async def obter_postos_graduacao():
+    """Endpoint para retornar todos os postos/graduações disponíveis."""
+    return controller.get_postos_graduacao()
+
+@router.get("/unidades_sgpm", response_model=List[Unidade])
+async def obter_unidades():
+    """Endpoint para retornar todas as unidades disponíveis."""
+    return controller.get_unidades()
+
+@router.get("/comandos_regionais", response_model=List[ComandoRegional])
+async def obter_comandos_regionais():
+    """Endpoint para retornar todos os comandos regionais disponíveis."""
+    return controller.get_comandos_regionais()
+
+@router.get("/policiais_filtro_avancado", response_model=FiltroAvancadoResponse)
+async def filtrar_policiais_avancado(
+    sexo: str = Query(None),
+    situacao: str = Query(None),
+    tipo: str = Query(None),
+    comando_regional: int = Query(None),
+    unidade: int = Query(None),
+    posto_grad: int = Query(None)
+):
+    """Filtra policiais com base em todos os filtros disponíveis."""
+    return controller.filtrar_policiais_avancado(
+        sexo=sexo,
+        situacao=situacao,
+        tipo=tipo,
+        comando_regional=comando_regional,
+        unidade=unidade,
+        posto_grad=posto_grad
+    )
 
 @router.get("/totais-por-cr")
 async def get_totais_por_cr():

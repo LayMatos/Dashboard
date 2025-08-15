@@ -29,7 +29,7 @@ export interface MapComponentProps {
   center?: LatLngExpression;
   zoom?: number;
   onGroupChange?: (municipios: string[]) => void;
-  cidades?: Cidade[];
+  cidades?: (Cidade | string)[];
 }
 
 export interface MapDesenhoProps {

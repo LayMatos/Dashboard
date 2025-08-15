@@ -8,6 +8,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import Mapa from './pages/Mapacomzoom';
 import SigarfPage from './pages/SIGARF/SigarfPage';
+import CautelaPage from './pages/CAUTELA/CautelaPage';
 
 const App: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ const App: React.FC = () => {
           <Route path="/sgpm" element={<SgpmPage />} />
           <Route path="/sgpm-distribuicao" element={<SgpmDistribuicaoPage />} />
           <Route path="/sigarf" element={<SigarfPage />} />
+          <Route path="/cautela" element={<CautelaPage />} />
         </Routes>
       </main>
       

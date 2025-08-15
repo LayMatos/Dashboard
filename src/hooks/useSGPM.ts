@@ -1,169 +1,118 @@
-import { useState, useEffect } from 'react';
-import { 
-  DadosSituacao, 
-  DadosTipo, 
-  DadosSexo, 
-  DadosPorUnidade,
-  DadosEfetivo,
-  ComandoRegional,   
-  Unidade,           
-  PostoGraduacao
-} from '../types/sgpm';
-import { 
-  fetchPoliciais, 
-  fetchPoliciaisFiltrados, 
-  fetchSexoPorCidade,
-  fetchTotaisPorCR,
+import { useState } from "react";
+import {
+  fetchPoliciaisPorSexo,
+  fetchPoliciaisPorSituacao,
+  fetchPoliciaisPorTipo,
+  fetchPoliciaisPorPostoGradSexo,
+  fetchPoliciaisFiltradosAvancado,
   fetchComandosRegionais,
-  fetchUnidades,
-  fetchPostosGraduacao
-} from '../services/api';
-import { GruposDeMunicipios } from '../types/sgpm';
+  fetchUnidadesPorComando,
+  fetchPostosGraduacoes,
+  fetchPoliciaisPorCidade
+} from "../services/api";
+
+import {
+  DadosPorUnidade,
+  GruposDeMunicipios
+} from "../types/sgpm";
 
 export const useSGPM = (gruposDeMunicipios: GruposDeMunicipios) => {
-  const [dadosSituacao, setDadosSituacao] = useState<DadosSituacao[]>([]);
-  const [dadosTipo, setDadosTipo] = useState<DadosTipo[]>([]);
-  const [dados, setDados] = useState<DadosSexo[]>([]);
-  const [sexos, setSexos] = useState<DadosSexo[]>([]);
-  const [situacoes, setSituacoes] = useState<DadosSituacao[]>([]);
-  const [tipos, setTipos] = useState<DadosTipo[]>([]);
-  const [selectedSexo, setSelectedSexo] = useState("");
-  const [selectedSituacao, setSelectedSituacao] = useState("");
-  const [selectedTipo, setSelectedTipo] = useState("");
-  const [quantidadeFiltrada, setQuantidadeFiltrada] = useState<number | null>(null);
-  const [exibirResultado, setExibirResultado] = useState(false);
-  const [selectedCR, setSelectedCR] = useState<string[]>([]);
-  const [dadosCarregados, setDadosCarregados] = useState(false);
-  const [dadosEfetivo, setDadosEfetivo] = useState<DadosEfetivo>({});
-  const [dadosPorUnidade, setDadosPorUnidade] = useState<DadosPorUnidade[]>([]);
-  const [comandosRegionais, setComandosRegionais] = useState<ComandoRegional[]>([]);
-  const [unidades, setUnidades] = useState<Unidade[]>([]);
-  const [postosGraduacao, setPostosGraduacao] = useState<PostoGraduacao[]>([]);
+  const [selectedSexo, setSelectedSexo] = useState<string | null>(null);
+  const [selectedSituacao, setSelectedSituacao] = useState<string | null>(null);
+  const [selectedTipo, setSelectedTipo] = useState<string | null>(null);
+  const [quantidadeFiltrada, setQuantidadeFiltrada] = useState<number>(0);
 
-  useEffect(() => {
-    const carregarDados = async () => {
-      const [
-        situacaoData,
-        tipoData,
-        sexoData,
-        comandosRegionaisData,
-        unidadesData,
-        postosGraduacaoData,
-      ] = await Promise.all([
-        fetchPoliciais("policiais_situacao"),
-        fetchPoliciais("policiais_tipo"),
-        fetchPoliciais("policiais_sexo"),
-        fetchComandosRegionais(),
-        fetchUnidades(),
-        fetchPostosGraduacao()
-      ]);
+  // --- Dados gerais por categoria ---
+  const fetchSexo = async () => await fetchPoliciaisPorSexo();
+  const fetchSituacao = async () => await fetchPoliciaisPorSituacao();
+  const fetchTipo = async () => await fetchPoliciaisPorTipo();
 
-      setDadosSituacao(situacaoData);
-      setDadosTipo(tipoData);
-      setDados(sexoData);
-      setSexos(sexoData);
-      setSituacoes(situacaoData);
-      setTipos(tipoData);
-      setComandosRegionais(comandosRegionaisData);
-      setUnidades(unidadesData);
-      setPostosGraduacao(postosGraduacaoData);
-      setDadosCarregados(true);
-    };
+  // --- Posto/Graduação e Sexo ---
+  const fetchPostoGradSexo = async () => {
+    return await fetchPoliciaisPorPostoGradSexo(
+      selectedSexo || undefined,
+      selectedSituacao || undefined,
+      selectedTipo || undefined
+    );
+  };
 
-    carregarDados();
-  }, []);
-
-  useEffect(() => {
-  const buscarDadosFiltrados = async () => {
-    if (!dadosCarregados) return;
-
-    const algumFiltroSelecionado =
-      selectedSexo !== "" || selectedSituacao !== "" || selectedTipo !== "";
-
-    if (!algumFiltroSelecionado) {
-      setExibirResultado(false);
-      return;
-    }
-
-    const resultado = await fetchPoliciaisFiltrados(
-      selectedSexo,
-      selectedSituacao,
-      selectedTipo
+  // --- Filtro Avançado ---
+  const aplicarFiltrosAvancados = async (
+    sexo?: string,
+    situacao?: string,
+    tipo?: string,
+    comandoId?: number,
+    unidadeId?: number,
+    postoGradId?: number
+  ) => {
+    const resultado = await fetchPoliciaisFiltradosAvancado(
+      sexo,
+      situacao,
+      tipo,
+      comandoId,
+      unidadeId,
+      postoGradId
     );
 
     if (resultado && typeof resultado.quantidade !== "undefined") {
       setQuantidadeFiltrada(resultado.quantidade);
-      setExibirResultado(true);
-    } else {
-      setQuantidadeFiltrada(null);
-      setExibirResultado(false);
     }
+    return resultado;
   };
 
-  buscarDadosFiltrados();
-}, [selectedSexo, selectedSituacao, selectedTipo, dadosCarregados]);
+  // --- Dropdowns ---
+  const fetchComandos = async () => await fetchComandosRegionais();
+  const fetchUnidades = async (comandoId?: number) =>
+    await fetchUnidadesPorComando(comandoId);
+  const fetchPostos = async () => await fetchPostosGraduacoes();
 
-
-  // Filtros independentes
-  const fetchPorComandoRegional = async (comando?: string) => {
-    return await fetchPoliciaisFiltrados(undefined, undefined, undefined, comando);
+  // --- Filtros independentes ---
+  const fetchPorComandoRegional = async (comandoId?: number) => {
+    return await fetchPoliciaisFiltradosAvancado(
+      undefined,
+      undefined,
+      undefined,
+      comandoId
+    );
   };
 
-  const fetchPorUnidade = async (unidade?: string) => {
-  const data = await fetchPoliciaisFiltrados(undefined, undefined, undefined, undefined, unidade);
-  // transforma DadosFiltrados | null para DadosPorUnidade[]
-  const resultado: DadosPorUnidade[] = data
-    ? [{ unidade: unidade || '', Feminino: 0, Masculino: data.quantidade }]
-    : [];
-  setDadosPorUnidade(resultado);
-  return resultado;
-};
-
-
-  const fetchPorPostoGraduacao = async (posto?: string) => {
-    return await fetchPoliciaisFiltrados(undefined, undefined, undefined, undefined, undefined, posto);
+  const fetchPorUnidade = async (unidadeId?: number) => {
+    const data = await fetchPoliciaisFiltradosAvancado(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      unidadeId
+    );
+    const resultado: DadosPorUnidade[] = data
+      ? [
+          {
+            unidade: unidadeId?.toString() || "",
+            Feminino: 0,
+            Masculino: data.quantidade
+          }
+        ]
+      : [];
+    return resultado;
   };
 
+  const fetchPorPostoGraduacao = async (postoGradId?: number) => {
+    return await fetchPoliciaisFiltradosAvancado(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      postoGradId
+    );
+  };
+
+  // --- Sexo por cidade ---
   const handleGroupClick = async (cidadesSelecionadas: string[]) => {
-    const crCorrespondente = Object.keys(gruposDeMunicipios).find(cr => {
-      return cidadesSelecionadas.every(cidade => 
-        gruposDeMunicipios[cr].includes(cidade)
-      );
-    });
-
-    if (!crCorrespondente) {
-      console.log("CR correspondente não encontrado.");
-      return;
-    }
-
-    const cidadesDoCR = gruposDeMunicipios[crCorrespondente] || [];
-    if (cidadesDoCR.length === 0) {
-      console.log("Nenhuma cidade encontrada para o CR selecionado.");
-      return;
-    }
-
-    const cidadesMaiusculas = cidadesDoCR.map(cidade => cidade.toUpperCase());
-    setSelectedCR(cidadesMaiusculas);
-
-    const dadosSexoPorCidade = await fetchSexoPorCidade(cidadesMaiusculas);
-    setDadosPorUnidade(dadosSexoPorCidade);
-  };
-
-  const handleReset = () => {
-    setSelectedSexo("");
-    setSelectedSituacao("");
-    setSelectedTipo("");
-    setQuantidadeFiltrada(null);
-    setExibirResultado(false);
+    return await fetchPoliciaisPorCidade(cidadesSelecionadas);
   };
 
   return {
-    dadosSituacao,
-    dadosTipo,
-    dados,
-    sexos,
-    situacoes,
-    tipos,
     selectedSexo,
     setSelectedSexo,
     selectedSituacao,
@@ -171,18 +120,17 @@ export const useSGPM = (gruposDeMunicipios: GruposDeMunicipios) => {
     selectedTipo,
     setSelectedTipo,
     quantidadeFiltrada,
-    exibirResultado,
-    selectedCR,
-    dadosCarregados,
-    dadosEfetivo,
-    dadosPorUnidade,
-    comandosRegionais,
-    unidades,
-    postosGraduacao,
-    handleGroupClick,
-    handleReset,
+    fetchSexo,
+    fetchSituacao,
+    fetchTipo,
+    fetchPostoGradSexo,
+    aplicarFiltrosAvancados,
+    fetchComandos,
+    fetchUnidades,
+    fetchPostos,
     fetchPorComandoRegional,
     fetchPorUnidade,
-    fetchPorPostoGraduacao
+    fetchPorPostoGraduacao,
+    handleGroupClick
   };
-}; 
+};
