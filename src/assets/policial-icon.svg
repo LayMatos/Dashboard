@@ -1,0 +1,10 @@
+<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+  <!-- Círculo de fundo -->
+  <circle cx="30" cy="30" r="25" fill="#1e40af" stroke="#1e3a8a" stroke-width="2"/>
+  
+  <!-- Estrela de polícia -->
+  <path d="M30 10 L33 20 L43 20 L35 26 L38 36 L30 30 L22 36 L25 26 L17 20 L27 20 Z" fill="#fbbf24"/>
+  
+  <!-- Texto "PM" -->
+  <text x="30" y="45" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="12" font-weight="bold">PM</text>
+</svg>
